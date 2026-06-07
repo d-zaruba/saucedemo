@@ -2,31 +2,19 @@ import { test, expect, BASE_URL } from './fixtures/auth';
 
 const PASSWORD = 'secret_sauce';
 
-const USERS = [
+const VALID_USERS = [
   'standard_user',
-  'locked_out_user',
   'problem_user',
   'performance_glitch_user',
   'error_user',
   'visual_user',
 ];
 
-for (const username of USERS) {
+for (const username of VALID_USERS) {
   test(`login and logout as ${username}`, async ({ page, auth }) => {
     await test.step('Login', async () => {
       await auth.login(username, PASSWORD);
-    });
 
-    if (username === 'locked_out_user') {
-      await test.step('Locked out user sees an error', async () => {
-        await expect(page.locator('[data-test="error"]')).toContainText(
-          'Sorry, this user has been locked out.',
-        );
-      });
-      return;
-    }
-
-    await test.step('Products page is shown', async () => {
       await expect(page).toHaveURL(/inventory\.html/);
       await expect(page.locator('.title')).toHaveText('Products');
     });
@@ -40,3 +28,11 @@ for (const username of USERS) {
     });
   });
 }
+
+test('locked out user sees an error on login', async ({ page, auth }) => {
+  await auth.login('locked_out_user', PASSWORD);
+
+  await expect(page.locator('[data-test="error"]')).toContainText(
+    'Sorry, this user has been locked out.',
+  );
+});
